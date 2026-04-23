@@ -21,6 +21,7 @@
         "project_reviewer",
     ],
     "data": [
+        "views/project_project_view.xml",
         "views/project_task_view.xml",
         "views/pull_request_view.xml",
     ],

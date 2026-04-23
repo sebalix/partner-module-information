@@ -37,7 +37,39 @@ class PullRequest(models.Model):
             "review"
         ),
     )
-
+    l1_internal_reviewer_ids = fields.Many2many(
+        comodel_name="res.users",
+        relation="pull_request_l1_internal_reviewer_rel",
+        column1="pull_request_id",
+        column2="internal_reviewer_id",
+        compute="_compute_level_internal_reviewer_ids",
+        store=True,
+        string="Internal Reviewer Level 1",
+        help="Level 1 reviewers are those doing the first reviews.",
+    )
+    l2_internal_reviewer_ids = fields.Many2many(
+        comodel_name="res.users",
+        relation="pull_request_l2_internal_reviewer_rel",
+        column1="pull_request_id",
+        column2="internal_reviewer_id",
+        compute="_compute_level_internal_reviewer_ids",
+        store=True,
+        string="Internal Reviewer Level 2",
+        help=(
+            "Level 2 reviewers are those approving for good the PR."
+            " They come after level 1 reviewers."
+        ),
+    )
+    waiting_for_l1_reviewers = fields.Many2many(
+        comodel_name="github.user",
+        compute="_compute_waiting_for_reviewers",
+        string="Waiting for Level 1 Reviewers",
+    )
+    waiting_for_l2_reviewers = fields.Many2many(
+        comodel_name="github.user",
+        compute="_compute_waiting_for_reviewers",
+        string="Waiting for Level 2 Reviewers",
+    )
     all_waiting_reviewer_ids = fields.Many2many(
         "github.user",
         compute="_compute_all_waiting_reviewer_ids",
@@ -79,3 +111,27 @@ class PullRequest(models.Model):
         for line in self:
             if line.project_id != line.task_id.project_id:
                 line.task_id = False
+
+    @api.depends("internal_reviewer_ids", "project_id.l2_internal_reviewer_ids")
+    def _compute_level_internal_reviewer_ids(self):
+        for record in self:
+            record.l1_internal_reviewer_ids = (
+                record.internal_reviewer_ids
+                - record.project_id.l2_internal_reviewer_ids
+            )
+            record.l2_internal_reviewer_ids = (
+                record.internal_reviewer_ids
+                & record.project_id.l2_internal_reviewer_ids
+            )
+
+    @api.depends("all_waiting_reviewer_ids", "l1_internal_reviewer_ids")
+    def _compute_waiting_for_reviewers(self):
+        for record in self:
+            record.waiting_for_l1_reviewers = (
+                record.all_waiting_reviewer_ids
+                & record.l1_internal_reviewer_ids.github_user_ids
+            )
+            record.waiting_for_l2_reviewers = (
+                record.all_waiting_reviewer_ids
+                & record.l2_internal_reviewer_ids.github_user_ids
+            )
