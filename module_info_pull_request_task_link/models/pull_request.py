@@ -135,3 +135,10 @@ class PullRequest(models.Model):
                 record.all_waiting_reviewer_ids
                 & record.l2_internal_reviewer_ids.github_user_ids
             )
+
+    def _update_state(self):
+        res = super()._update_state()
+        for record in self:
+            if record.state == "need_reviewer" and record.internal_reviewer_ids:
+                record.state = "waiting_review"
+        return res
