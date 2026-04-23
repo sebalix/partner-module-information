@@ -19,4 +19,19 @@
       <field name="code">model.cron_email_pull_requests_l1_reviewers()</field>
   </record>
 
+  <record model="ir.cron" id="cron_email_pull_requests_l2_reviewers">
+      <field name='name'>E-Mail - Pull Requests of L2 reviewers</field>
+      <field name='interval_number'>1</field>
+      <field name='interval_type'>weeks</field>
+      <field name="active" eval="True" />
+      <field name="user_id" ref="base.user_root" />
+      <field
+            name="nextcall"
+            eval="(datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d 00:00:00')"
+        />
+      <field name="model_id" ref="module_info_pull_request_migration.model_res_users" />
+      <field name="state">code</field>
+      <field name="code">model.cron_email_pull_requests_l2_reviewers()</field>
+  </record>
+
 </odoo>

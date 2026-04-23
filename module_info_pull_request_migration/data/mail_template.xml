@@ -96,4 +96,73 @@
         <field name="auto_delete" eval="False" />
     </record>
 
+    <record id="mail_template_pull_requests_l2_reviewer" model="mail.template">
+        <field name="name">L2 reviewers: Pull Requests status</field>
+        <field name="model_id" ref="model_res_users" />
+        <field
+            name="subject"
+        >Some reviewed Pull Requests require your attention {{ object.display_name }}</field>
+        <field name="partner_to">{{ object.partner_id.id }}</field>
+        <field name="description">Pull Requests status for L1 reviewers</field>
+        <field name="body_html" type="html">
+<div style="margin: 0px; padding: 0px;">
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        <p>Hello <t t-out="object.display_name" />,</p>
+
+        <p>As final reviewer, the following Pull Requests are waiting for you:</p>
+
+        <t
+                        t-set="prs_by_project"
+                        t-value="object._get_l2_pull_requests_by_project(migration_only=True)"
+                    />
+
+        <table class="table table-bordered w-auto" t-if="prs_by_project">
+        <t t-foreach="prs_by_project" t-as="project">
+            <t t-set="pull_requests" t-value="project_value" />
+
+            <tr style="background-color: #c5d7f2;">
+                <th colspan="4" t-out="project.name.upper()" />
+            </tr>
+
+            <tr style="background-color: #d7d8da">
+                <th>Task</th>
+                <th>PR</th>
+                <th>State</th>
+                <th>Notes</th>
+            </tr>
+
+            <tr t-foreach="pull_requests" t-as="pr">
+                <td>[<span t-out="pr.task_id.id" />]</td>
+                <td>
+                    [<span t-out="pr.id" />]
+                    <a t-att-href="pr.url" target="_blank" class="oe_link">
+                        <span t-out="pr.repo_id.organization" />/<span
+                                            t-out="pr.repo_id.name"
+                                        />#<span t-out="pr.number" />:
+                        <span t-out="pr.title" />
+                    </a>
+                </td>
+                <td>
+                    <span t-out="pr.state" />
+                </td>
+                <td>
+                    <span t-if="pr.approved_internal_reviewer_ids">
+                        <i class="fa fa-check" />
+                        Approved by:
+                        <t
+                                            t-out="', '.join(pr.approved_internal_reviewer_ids.mapped('display_name'))"
+                                        />
+                    </span>
+                </td>
+            </tr>
+        </t>
+        </table>
+        <p>Happy reviews,</p>
+    </p>
+</div>
+        </field>
+        <field name="lang">{{ object.lang }}</field>
+        <field name="auto_delete" eval="False" />
+    </record>
+
 </odoo>

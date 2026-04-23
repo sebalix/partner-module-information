@@ -46,7 +46,7 @@
                     <field
                         name="state"
                         widget="statusbar"
-                        statusbar_visible="draft,need_reviewer,waiting_review,approved,done"
+                        statusbar_visible="draft,need_reviewer,waiting_review,approved,approved_by_ak,done"
                     />
                 </header>
                 <sheet>
