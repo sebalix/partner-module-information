@@ -4,7 +4,8 @@ from datetime import date
 
 import requests
 
-from odoo import api, fields, models
+from odoo import _, api, fields, models
+from odoo.exceptions import UserError
 from odoo.fields import Command
 
 from ..tools import naive_dt
@@ -78,6 +79,16 @@ class PullRequest(models.Model):
         compute="_compute_approved_internal_reviewer_ids",
         string="Approving Internal Reviewers",
     )
+    blocked_for_one_week = fields.Boolean(
+        string="Blocked For One Week+",
+        compute="_compute_blocked_for_x",
+        search="_search_blocked_for_one_week",
+    )
+    blocked_for_one_month = fields.Boolean(
+        string="Blocked For One Month+",
+        compute="_compute_blocked_for_x",
+        search="_search_blocked_for_one_month",
+    )
 
     _sql_constraints = [
         (
@@ -86,6 +97,46 @@ class PullRequest(models.Model):
             "the pair pr number and repo must be unique",
         ),
     ]
+
+    @api.depends("state")
+    def _compute_blocked_for_x(self):
+        states = ("draft", "need_fix", "waiting_review", "cancel")
+        one_week_ago = fields.Datetime.subtract(fields.Datetime.now(), weeks=1)
+        one_month_ago = fields.Datetime.subtract(fields.Datetime.now(), months=1)
+        for record in self:
+            record.blocked_for_one_week = (
+                record.state in states and record.date_updated <= one_week_ago
+            )
+            record.blocked_for_one_month = (
+                record.state in states and record.date_updated <= one_month_ago
+            )
+
+    def _search_blocked_for_x(self, date):
+        states = ("draft", "need_fix", "waiting_review", "cancel")
+        return [
+            ("state", "in", states),
+            ("date_updated", "<=", date),
+        ]
+
+    def _search_blocked_for_one_week(self, operator, value):
+        if operator != "=":
+            raise UserError(_("Operation not supported"))
+        if not value:
+            raise UserError(_("False value not supported"))
+        one_week_ago = fields.Datetime.subtract(fields.Datetime.now(), weeks=1)
+        one_month_ago = fields.Datetime.subtract(fields.Datetime.now(), months=1)
+        domain = self._search_blocked_for_x(one_week_ago)
+        # Excluse PRs blocked for one month
+        domain += [("date_updated", ">=", one_month_ago)]
+        return domain
+
+    def _search_blocked_for_one_month(self, operator, value):
+        if operator != "=":
+            raise UserError(_("Operation not supported"))
+        if not value:
+            raise UserError(_("False value not supported"))
+        one_month_ago = fields.Datetime.subtract(fields.Datetime.now(), months=1)
+        return self._search_blocked_for_x(one_month_ago)
 
     # TODO in next version replace the author char by
     # an m2o author_id (github.user)

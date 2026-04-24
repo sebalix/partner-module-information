@@ -5,7 +5,10 @@
         <field name="name">pull.request.tree.view</field>
         <field name="model">pull.request</field>
         <field name="arch" type="xml">
-            <tree>
+            <tree
+                decoration-warning="blocked_for_one_week"
+                decoration-danger="blocked_for_one_month"
+            >
                 <field name="title" />
                 <field name="repo_id" />
                 <field name="module_ids" widget="many2many_tags" />
@@ -20,6 +23,8 @@
                 <field name="waiting_reviewer_ids" widget="many2many_tags" />
                 <field name="approved_reviewer_ids" widget="many2many_tags" />
                 <field name="refused_reviewer_ids" widget="many2many_tags" />
+                <field name="blocked_for_one_week" invisible="1" />
+                <field name="blocked_for_one_month" invisible="1" />
                 <button
                     name="open_url"
                     type="object"
@@ -130,6 +135,17 @@
                     name="my_waiting_review"
                     string="Waiting for my Review"
                     domain="[('waiting_reviewer_ids.user_id', '=', uid)]"
+                />
+                <separator />
+                <filter
+                    name="blocked_for_one_week"
+                    string="Blocked for one week+"
+                    domain="[('blocked_for_one_week', '=', True)]"
+                />
+                <filter
+                    name="blocked_for_one_month"
+                    string="Blocked for one month+"
+                    domain="[('blocked_for_one_month', '=', True)]"
                 />
                 <separator />
                 <group expand="0" string="Group By">
