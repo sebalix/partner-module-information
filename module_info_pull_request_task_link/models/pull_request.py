@@ -78,6 +78,11 @@ class PullRequest(models.Model):
         store=True,
         help="This include internal reviewer + github reviewer",
     )
+    partner_id = fields.Many2one(
+        # Override field from 'module_info_pull_request'
+        related="project_id.partner_id",
+        store=True,
+    )
 
     @api.depends(
         "waiting_reviewer_ids",
