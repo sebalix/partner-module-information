@@ -22,6 +22,7 @@
     "data": [
         "data/ir_cron.xml",
         "data/mail_template.xml",
+        "views/res_partner.xml",
     ],
     "demo": [],
 }
