@@ -89,6 +89,11 @@ class PullRequest(models.Model):
         compute="_compute_blocked_for_x",
         search="_search_blocked_for_one_month",
     )
+    partner_id = fields.Many2one(
+        comodel_name="res.partner",
+        ondelete="set null",
+        string="Customer",
+    )
 
     _sql_constraints = [
         (
